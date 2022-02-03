@@ -92,6 +92,74 @@ app.post("/login", async (req, res) => {
   }
 });
 
+app.post("/extract", async (req, res) => {
+  const { authorization } = req.headers;
+  const token = authorization?.replace("Bearer ", "");
+
+  const transactionSchema = joi.object({
+    type: joi.valid("deposit", "withdraw"),
+    value: joi.number().required(),
+  });
+
+  const validation = transactionSchema.validate(req.body);
+
+  if (validation.error) return res.sendStatus(422);
+
+  if (!token) return res.sendStatus(401);
+
+  try {
+    const session = await db.collection("sessions").findOne({ token });
+
+    if (!session) return res.sendStatus(401);
+
+    const user = await db.collection("users").findOne({ _id: session.userId });
+
+    if (user) {
+      const insertion = await db
+        .collection("extracts")
+        .insertOne({ ...req.body, userId: user._id });
+
+      if (insertion) return res.sendStatus(200);
+    } else {
+      return res.sendStatus(401);
+    }
+  } catch {
+    res.status(500).send("Internal server error");
+  }
+});
+
+app.get("/extract", async (req, res) => {
+  const { authorization } = req.headers;
+  const token = authorization?.replace("Bearer ", "");
+
+  if (!token) return res.sendStatus(401);
+
+  try {
+    const session = await db.collection("sessions").findOne({ token });
+
+    if (!session) return res.sendStatus(401);
+
+    const user = await db.collection("users").findOne({ _id: session.userId });
+
+    if (user) {
+      const extract = await db
+        .collection("extracts")
+        .find({ userId: user._id })
+        .toArray();
+
+      const output = extract.map((elem) => {
+        return { type: elem.type, value: elem.value };
+      });
+
+      res.status(200).send(output);
+    } else {
+      return res.sendStatus(401);
+    }
+  } catch {
+    res.status(500).send("Internal server error");
+  }
+});
+
 app.listen(5000, () => {
   console.log("@@@@@@@@@ Listening to port 5000");
 });
