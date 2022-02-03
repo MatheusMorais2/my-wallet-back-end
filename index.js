@@ -22,7 +22,6 @@ app.use(cors());
 
 app.post("/signup", async (req, res) => {
   const user = req.body;
-  console.log("chegou um user aqui: ", user);
 
   const signupSchema = joi.object({
     name: joi.string().required(),
@@ -37,11 +36,10 @@ app.post("/signup", async (req, res) => {
   }
 
   try {
-    console.log("chegou ate o try");
     let isEmailDuplicate = await db
       .collection("users")
       .findOne({ email: user.email });
-    console.log("viu se tem email igual");
+
     if (isEmailDuplicate) {
       res.status(409).send("Email ja cadastrado");
       return;
@@ -84,7 +82,7 @@ app.post("/login", async (req, res) => {
         token,
       });
 
-      res.status(200).send(token);
+      res.status(200).send({ name: userExists.name, token: token });
     } else {
       res.sendStatus(401);
       return;
