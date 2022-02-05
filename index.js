@@ -5,6 +5,7 @@ import joi from "joi";
 import bcrypt from "bcrypt";
 import cors from "cors";
 import { v4 as tokenGenerator } from "uuid";
+import dayjs from "dayjs";
 
 dotenv.config();
 
@@ -96,9 +97,13 @@ app.post("/extract", async (req, res) => {
   const { authorization } = req.headers;
   const token = authorization?.replace("Bearer ", "");
 
+  console.log(req.body);
+  console.log(req.headers);
+
   const transactionSchema = joi.object({
     type: joi.valid("deposit", "withdraw"),
     value: joi.number().required(),
+    description: joi.string().required(),
   });
 
   const validation = transactionSchema.validate(req.body);
@@ -115,9 +120,10 @@ app.post("/extract", async (req, res) => {
     const user = await db.collection("users").findOne({ _id: session.userId });
 
     if (user) {
+      const date = dayjs().format("DD/MM");
       const insertion = await db
         .collection("extracts")
-        .insertOne({ ...req.body, userId: user._id });
+        .insertOne({ ...req.body, userId: user._id, date: date });
 
       if (insertion) return res.sendStatus(200);
     } else {
@@ -148,7 +154,7 @@ app.get("/extract", async (req, res) => {
         .toArray();
 
       const output = extract.map((elem) => {
-        return { type: elem.type, value: elem.value };
+        return { type: elem.type, value: elem.value, date: elem.date };
       });
 
       res.status(200).send(output);
