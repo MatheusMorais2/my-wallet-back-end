@@ -1,22 +1,9 @@
-import joi from "joi";
 import bcrypt from "bcrypt";
 import { v4 as tokenGenerator } from "uuid";
 import db from "../db.js";
 
 export async function signUp(req, res) {
   const user = req.body;
-
-  const signupSchema = joi.object({
-    name: joi.string().required(),
-    email: joi.string().required(),
-    password: joi.string().required(),
-  });
-
-  const validation = signupSchema.validate(user);
-  if (validation.error) {
-    res.status(422).send(validation.error.details);
-    return;
-  }
 
   try {
     let isEmailDuplicate = await db
@@ -41,17 +28,6 @@ export async function signUp(req, res) {
 export async function logIn(req, res) {
   const user = req.body;
 
-  const loginSchema = joi.object({
-    email: joi.string().required(),
-    password: joi.string().required(),
-  });
-  const validation = loginSchema.validate(user);
-
-  if (validation.error) {
-    res.status(422).send(validation.error.details);
-    return;
-  }
-
   try {
     const userExists = await db
       .collection("users")
@@ -71,6 +47,6 @@ export async function logIn(req, res) {
       return;
     }
   } catch {
-    res.status(500).send("Internal server error");
+    res.status(500).send("capetaaa");
   }
 }
