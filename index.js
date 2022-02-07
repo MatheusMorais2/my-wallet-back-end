@@ -154,7 +154,12 @@ app.get("/extract", async (req, res) => {
         .toArray();
 
       const output = extract.map((elem) => {
-        return { type: elem.type, value: elem.value, date: elem.date };
+        return {
+          type: elem.type,
+          value: elem.value,
+          date: elem.date,
+          description: elem.description,
+        };
       });
 
       res.status(200).send(output);
